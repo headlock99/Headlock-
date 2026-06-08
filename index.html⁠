@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HEADLOCK - Tiến Bờ Rải</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+body{background:#0a0a0f;font-family:'Segoe UI',monospace;padding:20px}
+.container{max-width:400px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.header h1{background:linear-gradient(135deg,#ff3300,#ff6600);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:24px}
+.logo{color:#ff3300;font-size:20px}
+.card{background:#1a1a24;border-radius:20px;padding:20px;margin-bottom:15px}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #2a2a35}
+.toggle-label{color:#fff;font-weight:bold}
+.toggle-switch{width:50px;height:26px;background:#333;border-radius:26px;position:relative;cursor:pointer}
+.toggle-switch.active{background:#ff3300}
+.toggle-switch::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:2px;left:2px;transition:0.2s}
+.toggle-switch.active::after{left:26px}
+.stats{display:flex;justify-content:space-between;margin-bottom:15px}
+.stat{text-align:center;background:#1a1a24;padding:10px;border-radius:16px;flex:1;margin:0 5px}
+.stat-value{color:#ff3300;font-size:22px;font-weight:bold}
+.stat-label{color:#888;font-size:10px}
+.footer{text-align:center;color:#666;font-size:11px;margin-top:20px}
+#status{position:fixed;bottom:20px;right:20px;background:#111;color:#0f0;padding:8px 16px;border-radius:20px;font-size:11px;z-index:99999}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header"><div class="logo">🔒</div><h1>HEADLOCK</h1><div class="logo">™</div></div>
+<div class="card"><div class="toggle-row"><span class="toggle-label">🔘 STARTING FILES</span><div class="toggle-switch" id="mainToggle" onclick="toggleMain()"></div></div></div>
+<div class="stats"><div class="stat"><div class="stat-value" id="fpsVal">0</div><div class="stat-label">FPS</div></div><div class="stat"><div class="stat-value" id="pingVal">0</div><div class="stat-label">PING</div></div><div class="stat"><div class="stat-value" id="killVal">0</div><div class="stat-label">KILL</div></div></div>
+<div class="card"><div class="toggle-row"><span class="toggle-label">🎯 HEADLOCK AIM</span><div class="toggle-switch" id="aimToggle" onclick="toggleAim()"></div></div><div class="toggle-row"><span class="toggle-label">⚡ BOST RAM</span><div class="toggle-switch" id="ramToggle" onclick="toggleRam()"></div></div><div class="toggle-row"><span class="toggle-label">🔧 FIX RUNG</span><div class="toggle-switch" id="fixToggle" onclick="toggleFix()"></div></div></div>
+<div class="footer">HEADLOCK PRO - Chạm 2 ngón để aim | Bản quyền Tiến Bờ Rải</div>
+</div>
+<div id="status">🔒 HEADLOCK OFF</div>
+<script>
+let master=false;let aimActive=false;let ramActive=false;let fixActive=false;let touchAim=false;let aimInterval=null;let killCount=0;
+
+// STARTING FILES
+function toggleMain(){
+    master=!master;
+    let toggle=document.getElementById('mainToggle');
+    toggle.classList.toggle('active',master);
+    if(!master){
+        aimActive=false;
+        ramActive=false;
+        fixActive=false;
+        document.getElementById('aimToggle').classList.remove('active');
+        document.getElementById('ramToggle').classList.remove('active');
+        document.getElementById('fixToggle').classList.remove('active');
+        stopAim();
+        if(touchAim){
+            touchAim=false;
+            document.getElementById('status').innerHTML='🔒 HEADLOCK OFF';
+            document.getElementById('status').style.color='#0f0';
+        }
+    }
+}
+
+// HEADLOCK AIM
+function toggleAim(){
+    if(!master)return;
+    aimActive=!aimActive;
+    let toggle=document.getElementById('aimToggle');
+    toggle.classList.toggle('active',aimActive);
+    if(aimActive){
+        startAim();
+    }else{
+        stopAim();
+        if(touchAim){
+            touchAim=false;
+            document.getElementById('status').innerHTML='🔒 HEADLOCK OFF';
+            document.getElementById('status').style.color='#0f0';
+        }
+    }
+}
+
+// BOST RAM
+function toggleRam(){
+    if(!master)return;
+    ramActive=!ramActive;
+    document.getElementById('ramToggle').classList.toggle('active',ramActive);
+}
+
+// FIX RUNG
+function toggleFix(){
+    if(!master)return;
+    fixActive=!fixActive;
+    document.getElementById('fixToggle').classList.toggle('active',fixActive);
+}
+
+// AIMLOCK CORE
+function startAim(){
+    if(aimInterval)clearInterval(aimInterval);
+    aimInterval=setInterval(()=>{
+        if(!master||!aimActive||!touchAim)return;
+        let x=window.innerWidth/2,y=window.innerHeight/2;
+        let el=document.elementFromPoint(x,y);
+        if(el){
+            el.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            if(ramActive){
+                killCount++;
+                document.getElementById('killVal').innerText=killCount;
+            }
+        }
+    },16);
+}
+
+function stopAim(){
+    if(aimInterval){
+        clearInterval(aimInterval);
+        aimInterval=null;
+    }
+}
+
+// CHẠM 2 NGÓN
+let touchCount=0;
+document.addEventListener('touchstart',(e)=>{
+    touchCount=e.touches.length;
+    if(touchCount>=2&&master&&aimActive){
+        touchAim=!touchAim;
+        let st=document.getElementById('status');
+        if(touchAim){
+            st.innerHTML='🔴 HEADLOCK ACTIVE';
+            st.style.color='#f33';
+        }else{
+            st.innerHTML='🔒 HEADLOCK OFF';
+            st.style.color='#0f0';
+        }
+        e.preventDefault();
+    }
+});
+document.addEventListener('touchend',()=>{
+    touchCount=0;
+});
+
+// FPS COUNTER
+let fps=0,lastTime=performance.now(),frame=0;
+function countFPS(){
+    frame++;
+    let now=performance.now();
+    if(now-lastTime>=1000){
+        fps=frame;
+        document.getElementById('fpsVal').innerText=fps;
+        frame=0;
+        lastTime=now;
+    }
+    requestAnimationFrame(countFPS);
+}
+countFPS();
+
+// PING (ẢO)
+setInterval(()=>{
+    if(master){
+        document.getElementById('pingVal').innerText=Math.floor(20+Math.random()*50);
+    }
+},2000);
+</script>
+</body>
+</html>
